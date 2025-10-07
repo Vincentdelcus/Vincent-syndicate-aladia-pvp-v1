@@ -1,0 +1,207 @@
+-- 🧠 Rayfield Remote Loader + Full GUI Demo
+-- Place this LocalScript in StarterPlayer -> StarterPlayerScripts
+
+--== CONFIG ==--
+local REMOTE_URL = "https://raw.githubusercontent.com/MadzDevvv/Xylo-Scripts/refs/heads/main/XYLO%20X%20TRAPNET%20MOBILE.txt"
+local RAYFIELD_URL = "https://sirius.menu/rayfield"
+
+--== SERVICES ==--
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local LocalPlayer = Players.LocalPlayer
+
+--== SAFE NOTIFY ==--
+local function notify(title, text, duration)
+	duration = duration or 5
+	pcall(function()
+		StarterGui:SetCore("SendNotification", {
+			Title = title;
+			Text = text;
+			Duration = duration;
+		})
+	end)
+end
+
+--== LOAD RAYFIELD ==--
+local Rayfield
+local ok, result = pcall(function()
+	return loadstring(game:HttpGet(RAYFIELD_URL))()
+end)
+if ok and type(result) == "table" then
+	Rayfield = result
+else
+	return notify("Error", "Failed to load Rayfield GUI.")
+end
+
+--== WINDOW ==--
+local Window = Rayfield:CreateWindow({
+	Name = "aimbot ni Vincent",
+	LoadingTitle = "Vincent Loader",
+	LoadingSubtitle = "Rayfield Full GUI",
+	ConfigurationSaving = {
+		Enabled = true,
+		FolderName = "VincentRayfield",
+		FileName = "Config"
+	},
+	KeySystem = false,
+})
+
+--== MAIN TAB (LOADER) ==--
+local MainTab = Window:CreateTab("🎯 Loader", 4483362458)
+local LoaderSection = MainTab:CreateSection("Remote Loader")
+
+LoaderSection:CreateParagraph({Title = "Remote Script URL", Content = REMOTE_URL})
+
+local function safeFetchAndRun(url)
+	local ok, body = pcall(function() return game:HttpGet(url, true) end)
+	if not ok then return false, body end
+
+	local runOk, runErr = pcall(function()
+		loadstring(body)()
+	end)
+
+	if not runOk then
+		return false, runErr
+	end
+	return true
+end
+
+LoaderSection:CreateButton({
+	Name = "Load Xylo / Trapnet Mobile",
+	Callback = function()
+		Rayfield:Notify({Title = "Loader", Content = "Fetching remote script...", Duration = 3})
+		local ok, err = safeFetchAndRun(REMOTE_URL)
+		if ok then
+			Rayfield:Notify({Title = "Loader — Success", Content = "Script executed successfully.", Duration = 4})
+		else
+			Rayfield:Notify({Title = "Loader — Error", Content = tostring(err), Duration = 6})
+		end
+	end
+})
+
+LoaderSection:CreateToggle({
+	Name = "Auto-run on Join",
+	CurrentValue = false,
+	Flag = "autorun_flag",
+	Callback = function(value)
+		if value then
+			Rayfield:Notify({Title = "Auto-run", Content = "Attempting to run remote script...", Duration = 3})
+			safeFetchAndRun(REMOTE_URL)
+		end
+	end
+})
+
+--== CONTROL TAB (ALL RAYFIELD ELEMENTS) ==--
+local ControlsTab = Window:CreateTab("⚙️ Controls", 4483362458)
+local ControlsSection = ControlsTab:CreateSection("All GUI Elements")
+
+ControlsSection:CreateButton({
+	Name = "Test Notification",
+	Callback = function()
+		Rayfield:Notify({
+			Title = "Notification Test",
+			Content = "This is a Rayfield notification.",
+			Duration = 4
+		})
+	end
+})
+
+ControlsSection:CreateToggle({
+	Name = "Enable ESP",
+	CurrentValue = false,
+	Flag = "esp_flag",
+	Callback = function(v)
+		print("ESP toggled:", v)
+	end
+})
+
+ControlsSection:CreateSlider({
+	Name = "FOV Radius",
+	Range = {0, 360},
+	Increment = 10,
+	Suffix = "°",
+	CurrentValue = 90,
+	Flag = "fov_flag",
+	Callback = function(v)
+		print("FOV changed to:", v)
+	end
+})
+
+ControlsSection:CreateDropdown({
+	Name = "Aimbot Mode",
+	Options = {"Head", "Torso", "Legs"},
+	CurrentOption = "Head",
+	Flag = "aim_mode_flag",
+	Callback = function(opt)
+		print("Aimbot mode:", opt)
+	end
+})
+
+ControlsSection:CreateColorPicker({
+	Name = "ESP Color",
+	Color = Color3.fromRGB(0, 255, 0),
+	Flag = "esp_color_flag",
+	Callback = function(color)
+		print("ESP color set to:", color)
+	end
+})
+
+ControlsSection:CreateKeybind({
+	Name = "Toggle GUI Keybind",
+	CurrentKeybind = "RightShift",
+	HoldToInteract = false,
+	Flag = "gui_keybind_flag",
+	Callback = function(key)
+		print("Pressed:", key)
+	end
+})
+
+ControlsSection:CreateParagraph({
+	Title = "About",
+	Content = "All Rayfield GUI elements are included here. You can expand this section for your own tools or toggles."
+})
+
+--== VISUAL TAB ==--
+local VisualTab = Window:CreateTab("🎨 Visuals", 4483362458)
+local VisualSection = VisualTab:CreateSection("Customize GUI")
+
+VisualSection:CreateButton({
+	Name = "Switch to Dark Theme",
+	Callback = function()
+		Rayfield:ChangeTheme("Dark")
+		Rayfield:Notify({Title = "Theme", Content = "Dark theme applied!", Duration = 3})
+	end
+})
+
+VisualSection:CreateButton({
+	Name = "Switch to Light Theme",
+	Callback = function()
+		Rayfield:ChangeTheme("Light")
+		Rayfield:Notify({Title = "Theme", Content = "Light theme applied!", Duration = 3})
+	end
+})
+
+VisualSection:CreateButton({
+	Name = "Save Configuration",
+	Callback = function()
+		Rayfield:SaveConfiguration()
+		Rayfield:Notify({Title = "Config", Content = "Configuration saved.", Duration = 3})
+	end
+})
+
+VisualSection:CreateButton({
+	Name = "Load Configuration",
+	Callback = function()
+		Rayfield:LoadConfiguration()
+		Rayfield:Notify({Title = "Config", Content = "Configuration loaded.", Duration = 3})
+	end
+})
+
+--== FINAL INIT ==--
+Rayfield:LoadConfiguration()
+
+Rayfield:Notify({
+	Title = "Rayfield GUI Ready",
+	Content = "Full GUI loaded — 'aimbot ni Vincent' active!",
+	Duration = 6
+})
